@@ -40,9 +40,7 @@ export default function AddUserForm(){
 
     }
 
-// const SetUpImg = async () =>{
-//     setTempURL()
-// }
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
