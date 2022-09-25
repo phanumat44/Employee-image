@@ -2,10 +2,17 @@ import { useReducer } from "react"
 import { BiBrush } from 'react-icons/bi'
 import Success from "./success"
 import Bug from "./bug"
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "react-query"
 import { getUser, getUsers, updateUser } from "../lib/helper"
 
 export default function UpdateUserForm({ formId, formData, setFormData }){
+
+    const [imageSrc, setImageSrc] = useState();
+    const [uploadData, setUploadData] = useState();
+    const [models, setModels] = useState();
+    const [tempURL, setTempURL] = useState(avatar);
+    const [Data, setData] = useState();
 
     const queryClient = useQueryClient()
    const {isLoading, isError, data, error} = useQuery(['users', formId], () => getUser(formId))
@@ -16,18 +23,73 @@ export default function UpdateUserForm({ formId, formData, setFormData }){
         }
     })
 
+    function handleOnChange(changeEvent) {
+        const reader = new FileReader();
+    
+        reader.onload = function(onLoadEvent) {
+          setImageSrc(onLoadEvent.target.result);
+          setUploadData(undefined);
+        }
+        reader.readAsDataURL(changeEvent.target.files[0]);
+
+    }
+
+
    if(isLoading) return <div>Loading...!</div>
    if(isError) return <div>Error</div>
 
    const { name, avatar, salary, date, email, status } = data;
    const [firstname, lastname] = name ? name.split(' ') : formData
 
+
+   const delay = (delayInms) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
+  }
+
+
     const handleSubmit = async (e) => {
-        e.preventDefault();
+
+  e.preventDefault();
+
+  if(imageSrc){
+        const form = e.currentTarget;
+        const fileInput = Array.from(form.elements).find(({ name }) => name === 'file');
+    
+        const formDatax = new FormData();
+    
+        for ( const file of fileInput.files ) {
+          formDatax.append('file', file);
+        }
+    
+        formDatax.append('upload_preset', 'my-uploads');
+    
+        Data = await fetch('https://api.cloudinary.com/v1_1/dvktk1a8x/image/upload', {
+          method: 'POST',
+          body: formDatax
+        }).then(r => r.json());
+
+        setTempURL(Data.url);
+        console.log(Data.url)
+        setImageSrc(Data.url);
+        setTempURL(Data.url)
+        setUploadData(Data)
+        }
+        
+
+
+        let delayres = await delay(1000).then( async ()=> {
+            
+          
+          
         let userName = `${formData.firstname ?? firstname} ${formData.lastname ?? lastname}`;
-        let updated = Object.assign({}, data, formData, { name: userName})
-        await UpdateMutation.mutate(updated)
+        let updated = Object.assign({}, Data, formData, { name: userName ,avatar:imageSrc?Data.url:avatar})
+        await UpdateMutation.mutate(updated)})
+       
     }
+
+
+
+
 
     return (
         <form className="grid lg:grid-cols-2 w-4/6 gap-4" onSubmit={handleSubmit}>
@@ -63,9 +125,27 @@ export default function UpdateUserForm({ formId, formData, setFormData }){
                 </div>
             </div>
 
-            <button className="flex justify-center text-md w-2/6 bg-yellow-400 text-white px-4 py-2 border rounded-md hover:bg-gray-50 hover:border-green-500 hover:text-green-500">
+            <button className="flex justify-center text-md w-2/6 bg-yellow-400 text-white px-4 py-2 border rounded-md hover:bg-gray-50 hover:border-green-500 hover:text-green-500 max-h-50" >
              Update <span className="px-1"><BiBrush size={24}></BiBrush></span>
             </button>
+
+  
+            <p>
+            <input onChange={handleOnChange} type="file" name="file" />
+          </p>
+          
+          <img src={imageSrc ? imageSrc : avatar } className="max-w-64 max-h-64 w-64 " />
+          
+          {imageSrc && !uploadData && (
+            <p>
+              <button>Upload Files</button>
+            </p>
+          )}
+
+          {uploadData && (
+            <code><pre>{JSON.stringify(uploadData, null, 2)}</pre></code>
+          )}
+
 
         </form>
     )

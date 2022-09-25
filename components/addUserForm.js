@@ -17,7 +17,9 @@ export default function AddUserForm(){
 
     const [imageSrc, setImageSrc] = useState();
     const [uploadData, setUploadData] = useState();
-
+    const [models, setModels] = useState();
+    const [tempURL, setTempURL] = useState('https://cdn-icons-png.flaticon.com/512/3177/3177440.png');
+    
 
     const queryClient = useQueryClient()
     const [formData, setFormData] = useReducer(formReducer, {})
@@ -27,15 +29,20 @@ export default function AddUserForm(){
         }
     })
 
-    // function handleOnChange(changeEvent) {
-    //     const reader = new FileReader();
+    function handleOnChange(changeEvent) {
+        const reader = new FileReader();
     
-    //     reader.onload = function(onLoadEvent) {
-    //       setImageSrc(onLoadEvent.target.result);
-    //       setUploadData(undefined);
-    //     }
-    //     reader.readAsDataURL(changeEvent.target.files[0]);
-    // }
+        reader.onload = function(onLoadEvent) {
+          setImageSrc(onLoadEvent.target.result);
+          setUploadData(undefined);
+        }
+        reader.readAsDataURL(changeEvent.target.files[0]);
+
+    }
+
+// const SetUpImg = async () =>{
+//     setTempURL()
+// }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -44,38 +51,48 @@ export default function AddUserForm(){
 
 
 
-        // const form = event.currentTarget;
-        // const fileInput = Array.from(form.elements).find(({ name }) => name === 'file');
+        const form = e.currentTarget;
+        const fileInput = Array.from(form.elements).find(({ name }) => name === 'file');
     
-        // const formData = new FormData();
+        const formDatax = new FormData();
     
-        // for ( const file of fileInput.files ) {
-        //   formData.append('file', file);
-        // }
-    
-        // formData.append('upload_preset', 'my-uploads');
-    
-        // const data = await fetch('https://api.cloudinary.com/v1_1/dpvocrenk/image/upload', {
-        //   method: 'POST',
-        //   body: formData
-        // }).then(r => r.json());
-    
-        // setImageSrc(data.secure_url);
-        // console.log(data.secure_url)
-        // setUploadData(data)
-        
-        if(Object.keys(formData).length == 0) return console.log("Don't have Form Data");
-        let { firstname, lastname, email, salary, date, status } = formData;
-
-        const model = {
-            name : `${firstname} ${lastname}`,
-            avatar: `https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 10)}.jpg`,
-            email, salary, date, status : status ?? "Active"
+        for ( const file of fileInput.files ) {
+          formDatax.append('file', file);
         }
+    
+        formDatax.append('upload_preset', 'my-uploads');
+    
+        const data = await fetch('https://api.cloudinary.com/v1_1/dvktk1a8x/image/upload', {
+          method: 'POST',
+          body: formDatax
+        }).then(r => r.json());
+   
+ console.log(data.url)
 
-        addMutation.mutate(model)
+        setImageSrc(data.url);
+      //  setTempURL(data.url)
+        setUploadData(data)
+        
+        
+          let delayres = await delay(2000).then(e => {
+            setTempURL(data.url)
+            if(Object.keys(formData).length == 0) return console.log("Don't have Form Data");
+            let { firstname, lastname, email, salary, date, status } = formData;
+            const model = {
+                name : `${firstname} ${lastname}`,
+                avatar: `${data.url}`,
+                email, salary, date, status : status ?? "Active"
+            }
+            setModels(model)
+            addMutation.mutate(model)
+          });
+     
+
+        
     }
-
+    const delay = (delayInms) => {
+        return new Promise(resolve => setTimeout(resolve, delayInms));
+      }
     if(addMutation.isLoading) return <div>Loading!</div>
     if(addMutation.isError) return <Bug message={addMutation.error.message}></Bug>
     if(addMutation.isSuccess) return <Success message={"Added Successfully"}></Success>
@@ -122,8 +139,8 @@ export default function AddUserForm(){
              Add <span className="px-1"><BiPlus size={24}></BiPlus></span>
             </button>
            
-            {/* <p>
-            <input type="file" name="file" />
+            <p>
+            <input onChange={handleOnChange} type="file" name="file" />
           </p>
           
           <img src={imageSrc} />
@@ -136,7 +153,7 @@ export default function AddUserForm(){
 
           {uploadData && (
             <code><pre>{JSON.stringify(uploadData, null, 2)}</pre></code>
-          )} */}
+          )}
             
 
 
