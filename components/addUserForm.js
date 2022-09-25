@@ -133,7 +133,7 @@ export default function AddUserForm(){
                 </div>
             </div>
 
-            <button type="submit" className="flex justify-center text-md w-2/6 bg-green-500 text-white px-4 py-2 border rounded-md hover:bg-gray-50 hover:border-green-500 hover:text-green-500">
+            <button type="submit"  className="flex justify-center text-md w-2/6 bg-green-500 text-white px-4 py-2 border rounded-md hover:bg-gray-50 hover:border-green-500 hover:text-green-500">
              Add <span className="px-1"><BiPlus size={24}></BiPlus></span>
             </button>
            
